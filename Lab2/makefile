@@ -1,4 +1,5 @@
-default: Lab2.class Assembler.class Registers.class RegNotFoundException.class
+default: Lab2.class Assembler.class Registers.class RegNotFoundException.class \
+	Instructions.class BadInstructionException.class
 
 Lab2.class: Lab2.java
 	javac Lab2.java
@@ -9,8 +10,14 @@ Assembler.class: Assembler.java
 Registers.class: Registers.java
 	javac Registers.java
 
-RegNotFoundException: RegNotFoundException.java
+RegNotFoundException.class: RegNotFoundException.java
 	javac RegNotFoundException.java
+	
+Instructions.class: Instructions.java
+	javac Instructions.java
+
+BadInstructionException.class: BadInstructionException.java
+	javac BadInstructionException.java
 
 clean:
-	remove *.class
+	rm *.class

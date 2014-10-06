@@ -2,6 +2,7 @@ public class Registers {
 	public static String getRegisterCode(String reg) throws RegNotFoundException {
 		reg = reg.trim();
 		reg = reg.toLowerCase();
+		
 		if (reg.compareTo("$zero") == 0)
 			return "00000";
 		else if (reg.compareTo("$v0") == 0)

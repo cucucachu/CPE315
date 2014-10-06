@@ -8,8 +8,11 @@ public class Assembler {
 		String cur;
 		while (scanner.hasNext()) {
 			cur = scanner.next();
-			if (cur.contains('$'))
-				System.out.println(scanner.next());
+			if (cur.charAt(0) == '$') {
+				if (cur.charAt(cur.length() -1) == ',')
+					cur = cur.substring(0, cur.length() - 1);
+				System.out.println(cur);
+			}
 		}	
 	}
 }
