@@ -1,0 +1,10 @@
+default: Lab2.class Assembler.class
+
+Lab2.class: Lab2.java
+	javac Lab2.java
+	
+Assembler.class: Assembler.java
+	javac Assembler.java
+
+clean:
+	remove *.class
