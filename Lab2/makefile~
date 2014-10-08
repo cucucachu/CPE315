@@ -20,4 +20,4 @@ BadInstructionException.class: BadInstructionException.java
 	javac BadInstructionException.java
 
 clean:
-	remove *.class
+	rm *.class

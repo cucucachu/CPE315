@@ -1,5 +1,5 @@
 default: Lab2.class Assembler.class Registers.class RegNotFoundException.class \
-	Instructions.class BadInstructionException.class
+	Instructions.class BadInstructionException.class SyntaxException.class
 
 Lab2.class: Lab2.java
 	javac Lab2.java
@@ -18,6 +18,9 @@ Instructions.class: Instructions.java
 
 BadInstructionException.class: BadInstructionException.java
 	javac BadInstructionException.java
+
+SyntaxException.class: SyntaxException.java
+	javac SyntaxException.java
 
 clean:
 	rm *.class
