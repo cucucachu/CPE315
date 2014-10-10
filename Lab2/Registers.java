@@ -3,7 +3,12 @@ public class Registers {
 		reg = reg.trim();
 		reg = reg.toLowerCase();
 		
+		if (reg.charAt(reg.length() - 1) == ',')
+			reg = reg.substring(0, reg.length() - 1);
+		
 		if (reg.compareTo("$zero") == 0)
+			return "00000";
+		if (reg.compareTo("$0") == 0)
 			return "00000";
 		else if (reg.compareTo("$v0") == 0)
 			return "00010";

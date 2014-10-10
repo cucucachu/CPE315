@@ -112,5 +112,10 @@ public class Instructions {
 			throw new BadInstructionException("Could not find opCode for " + inst + ".");
 	}
 	
-	public static 
+	public static boolean usesShamt(String inst) {
+		if (inst.compareTo("sll") == 0)
+			return true;
+		
+		return false;
+	}
 }
