@@ -7,6 +7,8 @@ public class Assembler {
 		Scanner scanner = new Scanner(input);
 		String cur;
 		String machineCode;
+		
+		findLabels(input);
 		while (scanner.hasNextLine()) {
 			cur = scanner.nextLine();
 			try {
@@ -21,10 +23,53 @@ public class Assembler {
 		}	
 	}
 	
+	public static Hashtable<String, Integer> findLabels(File input) 
+		throws FileNotFoundException {
+		Scanner scanner;
+		Scanner lineScanner;
+		int curLineNumber;
+		String curLine;
+		String label;
+		String inst;
+		Hashtable<String, Integer> table;
+		
+		table = new Hashtable<String, Integer>();
+		scanner = new Scanner(input);
+		curLineNumber = 0;
+		
+		while (scanner.hasNextLine()) {
+			curLine = scanner.nextLine();
+			if (curLine.contains(":")) {
+				label = curLine.substring(0, curLine.indexOf(":")).trim();
+			}
+			
+			curLine = cleanUpLine(curLine);
+			lineScanner = new Scanner(curLine);
+			inst = "";
+			if (lineScanner.hasNext())
+				inst = lineScanner.next();
+			try {
+				Instructions.getOpCode(inst);
+				curLineNumber++;
+			}
+			catch(BadInstructionException ex)
+			{
+				
+			}
+			
+			if (lable.compareTo("") != 0) {
+				table.add(label, curLineNumber);
+				System.out.println("Label found at line " + curLineNumber 
+					+ " : " + label);
+			}
+			
+		}
+		
+		return table;
+	}
+	
 	public static String translateLine(String line) 
 		throws BadInstructionException, RegNotFoundException, SyntaxException {
-			int comment;
-			int label;
 			int type;
 			String inst;
 			String regD;
@@ -38,14 +83,8 @@ public class Assembler {
 			
 			
 			machineCode = "";
-			comment = line.indexOf("#");
-			label = line.indexOf(":");
 			
-			if (comment != -1) 
-				line = line.substring(0, comment);
-			
-			if (label != -1) 
-				line = line.substring(label + 1);
+			line = cleanUpLine(line);
 			
 			scanner = new Scanner(line);
 			
@@ -127,6 +166,45 @@ public class Assembler {
 			}
 			
 			return machineCode;
+	}
+	
+	private static String cleanUpLine(String line) throws SyntaxException {
+		Scanner scanner;
+		String temp;
+		int comment;
+		int label;
+		int endOfInst;
+	
+		if (line.trim().length() == 0)
+			return "";
+			
+		comment = line.indexOf("#");
+		if (comment != -1) 
+			line = line.substring(0, comment);
+		
+		label = line.indexOf(":");
+		if (label != -1) 
+			line = line.substring(label + 1);
+		
+		line = line.trim();
+		
+	
+		if (line.length() == 0)
+			return "";
+			
+		if (line.charAt(0) != 'j') {
+			endOfInst = line.indexOf("$");
+			if (endOfInst == -1)
+				throw new SyntaxException("No \"$\" found in instruction: " + line);
+			
+			line = line.substring(0, endOfInst) + " " + line.substring(endOfInst);
+		}
+		
+		line = line.replace(',', ' ');
+		
+		//System.out.println("Clean line: " + line);
+		
+		return line;
 	}
 }
 
