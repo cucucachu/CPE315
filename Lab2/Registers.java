@@ -58,6 +58,10 @@ public class Registers {
 			return "10110";
 		else if (reg.compareTo("$s7") == 0)
 			return "10111";
+		else if (reg.compareTo("$ra") == 0)
+			return "11111";
+		else if (reg.compareTo("$sp") == 0)
+			return "11101";
 		throw new RegNotFoundException("Could not find register for " + reg);
 	}
 }

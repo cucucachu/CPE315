@@ -3,74 +3,61 @@ import java.util.*;
 
 public class Assembler {
 	
-	public static void assemble(File input) throws FileNotFoundException {
+	public static void assemble(String input) {
 		Scanner scanner = new Scanner(input);
 		String cur;
+		int lineNumber;
 		String machineCode;
+		ArrayList<Label> labels;
 		
-		findLabels(input);
+		labels = findLabels(input);
+		
+		lineNumber = 0;
 		while (scanner.hasNextLine()) {
 			cur = scanner.nextLine();
 			try {
-				machineCode = translateLine(cur);
-				if (machineCode.equals("") == false)
+				machineCode = translateLine(cur, lineNumber, labels);
 					System.out.println(machineCode);
 			}
 			catch (Exception ex) {
 				System.out.println(ex);
 			}
-			
-		}	
+			lineNumber++;
+		}
 	}
 	
-	public static Hashtable<String, Integer> findLabels(File input) 
-		throws FileNotFoundException {
+	public static ArrayList<Label> findLabels(String input) {
 		Scanner scanner;
-		Scanner lineScanner;
-		int curLineNumber;
 		String curLine;
-		String label;
-		String inst;
-		Hashtable<String, Integer> table;
+		int lineNumber;
+		ArrayList<Label> labels;
 		
-		table = new Hashtable<String, Integer>();
+		int index;
+		
+		labels = new ArrayList<Label>();
 		scanner = new Scanner(input);
-		curLineNumber = 0;
+		lineNumber = 0;
 		
 		while (scanner.hasNextLine()) {
 			curLine = scanner.nextLine();
-			if (curLine.contains(":")) {
-				label = curLine.substring(0, curLine.indexOf(":")).trim();
-			}
+			index = curLine.indexOf(":");
+			if (index != -1)
+				labels.add(new Label(curLine.substring(0, index), lineNumber));
 			
-			curLine = cleanUpLine(curLine);
-			lineScanner = new Scanner(curLine);
-			inst = "";
-			if (lineScanner.hasNext())
-				inst = lineScanner.next();
-			try {
-				Instructions.getOpCode(inst);
-				curLineNumber++;
-			}
-			catch(BadInstructionException ex)
-			{
-				
-			}
-			
-			if (lable.compareTo("") != 0) {
-				table.add(label, curLineNumber);
-				System.out.println("Label found at line " + curLineNumber 
-					+ " : " + label);
-			}
-			
+			lineNumber++;
 		}
 		
-		return table;
+		return labels;
+		
 	}
 	
-	public static String translateLine(String line) 
+
+	public static String translateLine(String line, int lineNumber,
+		ArrayList<Label> labels) 
 		throws BadInstructionException, RegNotFoundException, SyntaxException {
 			int type;
+			int index;
+			int labelLineNumber;
 			String inst;
 			String regD;
 			String regS;
@@ -80,23 +67,21 @@ public class Assembler {
 			Scanner scanner;
 			Integer immVal;
 			String immStr;
+			Label label;
 			
 			
 			machineCode = "";
 			
-			line = cleanUpLine(line);
+			index = line.indexOf(":");
+			if (index != -1)
+				line = line.substring(index + 1);
 			
 			scanner = new Scanner(line);
 			
 			if (!scanner.hasNext())
 				return machineCode;
 			
-			try {
-				inst = scanner.next();
-			}
-			catch (Exception ex) {
-				throw new SyntaxException("No instruction");
-			}
+			inst = scanner.next();
 			
 			type = Instructions.getType(inst);
 			
@@ -104,56 +89,120 @@ public class Assembler {
 			
 			try {
 				if (type == Instructions.RTYPE) {
-			
-					regD = scanner.next();
-					regS = scanner.next();
-					regT = scanner.next();
-					
-					if (Instructions.usesShamt(inst))
-						machineCode = machineCode + " 00000";
-					else
-						machineCode = machineCode + " " 
-							+ Registers.getRegisterCode(regS);
-					
-					machineCode = machineCode + " " 
-						+ Registers.getRegisterCode(regT);
-					
-					machineCode = machineCode + " "
-						+ Registers.getRegisterCode(regD);
+					if (Instructions.isJR(inst)) {
+						regS = scanner.next();
 						
-					if (Instructions.usesShamt(inst))
-						machineCode = machineCode + " "
-							+ Integer.toBinaryString(new Integer(regS));
-					else
-						machineCode = machineCode + " 00000";
+						machineCode = machineCode + " " + Registers.getRegisterCode(regS);
+						machineCode = machineCode + " 000000000000000";
+						machineCode = machineCode + " " + Instructions.getFunct(inst);
+					}
+					else {
+						regD = scanner.next();
+						regS = scanner.next();
+						regT = scanner.next();
 					
-					machineCode = machineCode + " "
-						+ Instructions.getFunct(inst);
+						if (Instructions.usesShamt(inst))
+							machineCode = machineCode + " 00000";
+						else
+							machineCode = machineCode + " " 
+								+ Registers.getRegisterCode(regS);
+					
+						machineCode = machineCode + " " 
+							+ Registers.getRegisterCode(regT);
+					
+						machineCode = machineCode + " "
+							+ Registers.getRegisterCode(regD);
+						
+						if (Instructions.usesShamt(inst))
+							machineCode = machineCode + " "
+								+ Integer.toBinaryString(new Integer(regS));
+						else
+							machineCode = machineCode + " 00000";
+					
+						machineCode = machineCode + " "
+							+ Instructions.getFunct(inst);
+					}
 				}
 				else if (type == Instructions.ITYPE) {
 					regT = scanner.next();
 					regS = scanner.next();
-					immediate = scanner.next();
-					
-					machineCode = machineCode + " " 
-						+ Registers.getRegisterCode(regS);
-					
-					machineCode = machineCode + " " 
-						+ Registers.getRegisterCode(regT);
 						
-					immVal = new Integer(immediate);
-					immStr = Integer.toBinaryString(immVal);
+					if (Instructions.isBranch(inst)) {
+						immediate = scanner.next();
+						machineCode = machineCode + " " 
+							+ Registers.getRegisterCode(regT);
 					
-					for (int i = immStr.length(); i < 16; i++)
-						immStr = "0" + immStr;
+						machineCode = machineCode + " " 
+							+ Registers.getRegisterCode(regS);
+							
+						index = labels.indexOf(new Label(immediate, 0));
+						label = labels.get(index);
+						labelLineNumber = label.getRelativeLineNumber(lineNumber);
 						
-					for (int i = immStr.length(); i > 16; i--)
-						immStr = immStr.substring(1, immStr.length());
+						immVal = new Integer(labelLineNumber);
+						immStr = Integer.toBinaryString(immVal);
 					
-					machineCode = machineCode + " " + immStr;
+						for (int i = immStr.length(); i < 16; i++)
+							immStr = "0" + immStr;
+						
+						for (int i = immStr.length(); i > 16; i--)
+							immStr = immStr.substring(1, immStr.length());
+					
+						machineCode = machineCode + " " + immStr;
+					}
+					else if (Instructions.isMemAccess(inst)) {
+						index = regS.indexOf("(");
+						if (index == -1)
+							throw new SyntaxException("No \"(\" found in a lw or sw.");
+						
+						immediate = regS.substring(0, index);
+						regS = regS.substring(index + 1, regS.length() - 1);
+						
+						machineCode = machineCode + " " + Registers.getRegisterCode(regS);
+						machineCode = machineCode + " " + Registers.getRegisterCode(regT);
+						
+						immVal = new Integer(immediate);
+						immStr = Integer.toBinaryString(immVal);
+					
+						for (int i = immStr.length(); i < 16; i++)
+							immStr = "0" + immStr;
+						
+						for (int i = immStr.length(); i > 16; i--)
+							immStr = immStr.substring(1, immStr.length());
+					
+						machineCode = machineCode + " " + immStr;
+					}
+					else {
+						immediate = scanner.next();
+						machineCode = machineCode + " " 
+							+ Registers.getRegisterCode(regS);
+					
+						machineCode = machineCode + " " 
+							+ Registers.getRegisterCode(regT);
+						
+						immVal = new Integer(immediate);
+						immStr = Integer.toBinaryString(immVal);
+					
+						for (int i = immStr.length(); i < 16; i++)
+							immStr = "0" + immStr;
+						
+						for (int i = immStr.length(); i > 16; i--)
+							immStr = immStr.substring(1, immStr.length());
+					
+						machineCode = machineCode + " " + immStr;
+					}
 				}
 				else if (type == Instructions.JTYPE) {
-			
+					index = labels.indexOf(new Label(scanner.next(), 0));
+					label = labels.get(index);
+					labelLineNumber = label.getAbsoluteLineNumber();
+					immVal = new Integer(labelLineNumber);
+					immStr = Integer.toBinaryString(immVal);
+					
+					for (int i = immStr.length(); i < 26; i++)
+						immStr = "0" + immStr;
+					
+					machineCode = machineCode + " " + immStr;
 				}
 				else
 					throw new SyntaxException("Bad Instruction " + inst);
@@ -166,45 +215,6 @@ public class Assembler {
 			}
 			
 			return machineCode;
-	}
-	
-	private static String cleanUpLine(String line) throws SyntaxException {
-		Scanner scanner;
-		String temp;
-		int comment;
-		int label;
-		int endOfInst;
-	
-		if (line.trim().length() == 0)
-			return "";
-			
-		comment = line.indexOf("#");
-		if (comment != -1) 
-			line = line.substring(0, comment);
-		
-		label = line.indexOf(":");
-		if (label != -1) 
-			line = line.substring(label + 1);
-		
-		line = line.trim();
-		
-	
-		if (line.length() == 0)
-			return "";
-			
-		if (line.charAt(0) != 'j') {
-			endOfInst = line.indexOf("$");
-			if (endOfInst == -1)
-				throw new SyntaxException("No \"$\" found in instruction: " + line);
-			
-			line = line.substring(0, endOfInst) + " " + line.substring(endOfInst);
-		}
-		
-		line = line.replace(',', ' ');
-		
-		//System.out.println("Clean line: " + line);
-		
-		return line;
 	}
 }
 

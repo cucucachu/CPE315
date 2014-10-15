@@ -140,13 +140,4 @@ public class Instructions {
 			return true;
 		return false;
 	}
-	
-	public static boolean isJR(String inst) {
-		inst = inst.toLowerCase();
-		inst = inst.trim();
-		
-		if (inst.compareTo("jr") == 0)
-			return true;
-		return false;
-	}
 }

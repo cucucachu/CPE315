@@ -18,7 +18,7 @@ public class Lab2 {
       
       try {
       	formattedInput = Formatter.formatAssemblyFile(input);
-      	//System.out.println("Formatted assembly file: \n" + formattedInput);
+      	/System.out.println("Formatted assembly file: \n" + formattedInput);
       	Assembler.assemble(formattedInput);
    	}
    	catch (Exception ex) {
