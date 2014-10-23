@@ -50,7 +50,7 @@ public class Label {
 			curLine = scanner.nextLine();
 			index = curLine.indexOf(":");
 			if (index != -1)
-				labels.add(new Label(curLine.substring(0, index).trim(), lineNumber));
+				labels.add(new Label(curLine.substring(0, index), lineNumber));
 			
 			lineNumber++;
 		}

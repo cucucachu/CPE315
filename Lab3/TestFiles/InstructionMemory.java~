@@ -1,0 +1,52 @@
+import java.util.Scanner;
+
+public class InstructionMemory {
+	protected ArrayList<String> memory;
+	
+	public InstructionMemory(String assemblyCode) {
+		Scanner scanner;
+		
+		memory = new ArrayList<String>();
+		
+		if (assemblyCode != null && assemblyCode.compareTo("") != 0) {
+			scanner = new Scanner(assemblyCode);
+			
+			while (scanner.hasNextLine()) {
+				memory.add(scanner.nextLine());
+			}
+		}
+	}
+	
+	public int get(int address) throws MemoryException {
+		if (address >= memory.length || address < 0)
+			throw new MemoryException("Invalid Instruction Address.");
+			
+		return memory[address];
+	}
+	
+	public void set(int address, int value) throws MemoryException {
+		if (address >= memory.length || address < 0)
+			throw new MemoryException("Invalid Instruction Address.");
+		
+		memory[address] = value;
+	}
+	
+	public String toString(int start, int end){
+		String mem;
+		
+		mem = "";
+		
+		if (start < 0 || start >= memory.length
+			||  end < 0 || end >= memory.length || start > end)
+		{
+			mem = "Invalid Instruction Addresses";
+		}
+		else {
+			for (int i = start; i <= end; i++) {
+				mem = mem + "\n[" + i + "] = " + memory[i];
+			} 
+		}
+		
+		return mem;
+	}
+}
