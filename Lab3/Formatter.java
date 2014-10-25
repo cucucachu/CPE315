@@ -27,14 +27,15 @@ public class Formatter {
 						do {
 							curLine = scanner.nextLine();
 							curLine = removeCommentsAndTrim(curLine);
-							if (containsLabel(curLine))
+							if (containsLabel(curLine)) 
 								throw new SyntaxException("Two Labels in a row");
 						} while (curLine.compareTo("") == 0);
 					
 						curLine = lastLabel + ": " + curLine;
 					}
 					catch (NoSuchElementException ex) {
-						throw new SyntaxException("Label at end of doc.");
+						//throw new SyntaxException("Label at end of doc.");
+						curLine = lastLabel + ":";
 					}
 				}
 			}
