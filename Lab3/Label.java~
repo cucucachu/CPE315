@@ -34,9 +34,6 @@ public class Label {
 		return false;
 	}
 	
-	public String toString() {
-		return myLabel + " at line number " + lineNumber;
-	}
 	public static ArrayList<Label> findLabels(String input) {
 		Scanner scanner;
 		String curLine;

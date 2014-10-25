@@ -13,7 +13,9 @@ loop:
 	j loop
 	
 	
-	
+poop:
+
+dedoop: deflea: #some comment
 	
 double:
 	add $v0, $a0, $a0

@@ -32,8 +32,6 @@ public class InstructionMemory {
 		for(String instruction : memory) {
 			toReturn = toReturn + instruction + "\n";
 		}
-		
-		return toReturn;
 	}
 	
 	public int size() {

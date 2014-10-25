@@ -194,8 +194,11 @@ public class lab3 {
 			
 		instruction = instructionMemory.get(programCounter);
 		instruction = instruction.trim();
-		
-		instruction = Formatter.removeLabels(instruction);
+		labelIndex = instruction.indexOf(":");
+	
+		if (labelIndex != -1) {
+			instruction = instruction.substring(labelIndex + 1);
+		}
 	
 		instruction = instruction.replace("(", " ");
 		instruction = instruction.replace(")", " ");
