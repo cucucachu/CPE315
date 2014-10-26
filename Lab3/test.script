@@ -1,0 +1,11 @@
+java lab3 TestFiles/lab3_fib.asm TestFiles/lab3_fib.script > TestFiles/myOut1
+java lab3 TestFiles/lab3_test3.asm TestFiles/lab3_test3.script > TestFiles/myOut3
+java lab3 TestFiles/sum_10.asm TestFiles/sum_10.script > TestFiles/myOut2
+
+echo diff1:
+diff -w -B TestFiles/myOut1 TestFiles/lab3_fib.output
+echo diff2:
+diff -w -B TestFiles/myOut2 TestFiles/sum_10.output
+echo diff3:
+diff -w -B TestFiles/myOut3 TestFiles/lab3_test3.output
+

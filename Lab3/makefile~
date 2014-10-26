@@ -1,16 +1,11 @@
 default: lab3.class Memory.class RegisterFile.class Label.class RegNotFoundException.class \
-	MemoryException.class SyntaxException.class Formatter.class InstructionMemory.class \
-	MipsCPU.class
+	MemoryException.class SyntaxException.class Formatter.class InstructionMemory.class
 	
 lab3: lab3.class Memory.class RegisterFile.class Label.class RegNotFoundException.class \
-	MemoryException.class SyntaxException.class Formatter.class InstructionMemory.class \
-	MipsCPU.class
+	MemoryException.class SyntaxException.class Formatter.class InstructionMemory.class
 	
 lab3.class: lab3.java
 	javac lab3.java
-	
-MipsCPU.class: MipsCPU.java
-	javac MipsCPU.java
 	
 Memory.class: Memory.java
 	javac Memory.java

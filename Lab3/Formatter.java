@@ -27,7 +27,7 @@ public class Formatter {
 				}
 				
 				try {
-					do {
+					while (curLine.compareTo("") == 0) {
 						curLine = scanner.nextLine();
 						curLine = removeCommentsAndTrim(curLine);
 						if (containsLabel(curLine)) {
@@ -39,7 +39,7 @@ public class Formatter {
 							
 							//throw new SyntaxException("Two Labels in a row");
 						}
-					} while (curLine.compareTo("") == 0);
+					}
 				
 					curLine = lastLabel + curLine;
 				}
