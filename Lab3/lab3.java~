@@ -151,9 +151,9 @@ public class lab3 {
 						System.out.println("        Simulator reset");
 					}
 					else if (firstChar.compareTo("i") == 0) {
-						System.out.println("Next instruction: " 
-							+ cpu.getNextInstruction() + "\n"
-							+ "   at pc = " + cpu.getProgramCounter());
+						System.out.println("Next instruction: \"" 
+							+ cpu.getNextInstruction() + "\" at pc=" 
+							+ cpu.getProgramCounter());
 					}
 					else if (firstChar.compareTo("a") == 0) {
 						System.out.println(cpu.instructionMemoryToSting());
