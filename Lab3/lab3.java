@@ -139,7 +139,8 @@ public class lab3 {
 					else if (firstChar.compareTo("c") == 0) {
 						cpu.reset();
 						System.out.println("        Simulator reset");
-					}
+					}/*
+					
 					else if (firstChar.compareTo("i") == 0) {
 						System.out.println("Next instruction: \"" 
 							+ cpu.getNextInstruction() + "\" at pc=" 
@@ -152,7 +153,8 @@ public class lab3 {
 						System.out.println("Labels");
 						for (Label label : labels)
 							System.out.println(label);
-					}
+					} 
+					*/
 					else if (firstChar.compareTo("q") == 0) {
 						return;
 					}
