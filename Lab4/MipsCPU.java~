@@ -7,6 +7,7 @@ public class MipsCPU {
 	private Memory memory = new Memory(MEM_SIZE);
 	private RegisterFile registerFile = new RegisterFile();
 	private InstructionMemory instructionMemory;
+	private Simulator sim;
 	private ArrayList<Label> labels;
 	
 	
@@ -17,12 +18,14 @@ public class MipsCPU {
 		registerFile = new RegisterFile();
 		instructionMemory = new InstructionMemory(assemblyCode);
 		this.labels = labels;
+		sim = new Simulator();
 		reset();
 	}
 	
 	public void reset() {
 		memory.clear();
 		registerFile.clear();
+		sim.reset();
 		programCounter = 0;	
 	}
 	
@@ -31,10 +34,12 @@ public class MipsCPU {
 	}
 	
 	public String getNextInstruction() {
-		if (programCounter >= instructionMemory.size()) 
+		try {
+			return instructionMemory.get(programCounter);
+		}
+		catch (MemoryException ex) {
 			return "No more instructions.";
-		
-		return instructionMemory.get(programCounter);
+		}
 	}
 	
 	public String getMemoryString(int from, int to) {
@@ -49,6 +54,10 @@ public class MipsCPU {
 		return programCounter;
 	}
 	
+	public String getSimString() {
+		return sim.toString();
+	}
+	
 	public boolean execute() 
 		throws SyntaxException, MemoryException, NoSuchElementException, RegNotFoundException,
 			NumberFormatException {
@@ -57,9 +66,13 @@ public class MipsCPU {
 		String operation;
 		int labelIndex;
 		
-		
-		if (programCounter >= instructionMemory.size()) 
-			return false;
+		if (programCounter >= instructionMemory.size()) {
+			sim.nextInstructionIs("empty");
+			sim.programEnd();
+			if (sim.simulationEnded())
+				return false;
+			return true;
+		}
 			
 		instruction = instructionMemory.get(programCounter);
 		instruction = instruction.trim();
@@ -71,6 +84,8 @@ public class MipsCPU {
 	
 		if (instruction.compareTo("") == 0)
 			return false;
+	
+		sim.nextInstructionIs(instruction);
 	
 		scanner = new Scanner(instruction);
 

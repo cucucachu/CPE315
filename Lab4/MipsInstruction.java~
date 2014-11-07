@@ -1,28 +1,49 @@
 import java.util.*;
 
 public class MipsInstruction {
-	public static String op;
-	public static String rd;
-	public static String rs;
-	public static String rt;
-	public static String imm;
-	public static String shamt;
-	public static String c;
+	public static final int RTYPE = 0;
+	public static final int ITYPE = 1;
+	public static final int JTYPE = 2;
+	public static final int NOTYPE = 3;
+	
+	public String op;
+	public String rd;
+	public String rs;
+	public String rt;
+	public String imm;
+	public String shamt;
+	public String c;
+	public int numStall;
+	public int numSquash;
 
 	public MipsInstruction() {
 		op = rd = rs = rt = imm = shamt = c = null;
+		numStall = numSquash = 0;
+	}
+
+	public MipsInstruction(boolean custom, String op) {
+		this.op = op.trim().toLowerCase();
+		rd = rs = rt = imm = shamt = c = null;
+	}
+
+	public MipsInstruction(String op, int numStall, int numSquash) {
+		this.op = op.trim().toLowerCase();
+		rd = rs = rt = imm = shamt = c = null;
+		this.numStall = numStall;
+		this.numSquash = numSquash;
 	}
 	
-	public static MipsInstruction mipsInstructionFactory(String instruction)  
-		throws SyntaxException, MemoryException, NoSuchElementException, RegNotFoundException,
+	
+	public MipsInstruction(String instruction) throws SyntaxException, 
+		MemoryException, NoSuchElementException, RegNotFoundException,
 			NumberFormatException {
-
-		MipsInstruction mipsInstruction;
 		Scanner scanner;
 		String operation;		
 		
-		mipsInstruction = new MipsInstruction();
-		mipsInstruction.op = "empty";
+		op = rd = rs = rt = imm = shamt = c = null;
+		numStall = numSquash = 0;
+		
+		op = "empty";
 		
 		instruction = instruction.trim();
 		
@@ -30,9 +51,10 @@ public class MipsInstruction {
 	
 		instruction = instruction.replace("(", " ");
 		instruction = instruction.replace(")", " ");
+		instruction = instruction.replace(",", " ");
 	
-		if (instruction.compareTo("") == 0)
-			return mipsInstruction;
+		if (instruction.compareTo("") == 0 || instruction.compareTo("empty") == 0)
+			return;
 	
 		scanner = new Scanner(instruction);
 
@@ -40,7 +62,7 @@ public class MipsInstruction {
 
 		operation = operation.trim();
 		operation = operation.toLowerCase();
-		mipsInstruction.op = operation;
+		op = operation;
 
 		if (operation.compareTo("and") == 0
 			|| operation.compareTo("or") == 0
@@ -48,47 +70,46 @@ public class MipsInstruction {
 			|| operation.compareTo("slt") == 0
 			|| operation.compareTo("sub") == 0) {	
 			
-			mipsInstruction.rd = scanner.next();
-			mipsInstruction.rs = scanner.next();
-			mipsInstruction.rt = scanner.next();
+			rd = scanner.next();
+			rs = scanner.next();
+			rt = scanner.next();
 		}
 		else if (operation.compareTo("addi") == 0) {
 	
-			mipsInstruction.rt = scanner.next();
-			mipsInstruction.rs = scanner.next();
-			mipsInstruction.imm = scanner.next();
+			rt = scanner.next();
+			rs = scanner.next();
+			imm = scanner.next();
 		}
 		else if (operation.compareTo("sll") == 0) {
 		
-			mipsInstruction.rd = scanner.next();
-			mipsInstruction.rt = scanner.next();
-			mipsInstruction.shamt = scanner.next();
+			rd = scanner.next();
+			rt = scanner.next();
+			shamt = scanner.next();
 		}
 		else if (operation.compareTo("beq") == 0
 			|| operation.compareTo("bne") == 0) {
 	
-			mipsInstruction.rt = scanner.next();
-			mipsInstruction.rs = scanner.next();
-			mipsInstruction.c = scanner.next();
+			rt = scanner.next();
+			rs = scanner.next();
+			c = scanner.next();
 		}
 		else if (operation.compareTo("lw") == 0
 			|| operation.compareTo("sw") == 0) {
 	
-			mipsInstruction.rt = scanner.next();
-			mipsInstruction.c = scanner.next();
-			mipsInstruction.rs = scanner.next();
+			rt = scanner.next();
+			c = scanner.next();
+			rs = scanner.next();
 		}
 		else if (operation.compareTo("j") == 0
 		|| operation.compareTo("jal") == 0) {
-			mipsInstruction.c = scanner.next();
+			c = scanner.next();
 		}
 		else if (operation.compareTo("jr") == 0) {
-			mipsInstruction.rs = scanner.next();
+			rs = scanner.next();
 		}
 		else
 			throw new SyntaxException("Unknown isntruction: " + operation);
 			
-		return mipsInstruction;
 	}
 	
 	public MipsInstruction makeCopy() {
@@ -103,10 +124,77 @@ public class MipsInstruction {
 		toReturn.shamt = this.shamt;
 		toReturn.c = this.c;
 		
-		op = rd = rs = rt = imm = shamt = c = null;
+		return toReturn;
+	}
+	
+	public int getType() throws SyntaxException {
+		if (op == null)
+			throw new SyntaxException("No type for null instruction.");
+		
+		if (op.compareTo("and") == 0)
+			return RTYPE;
+		else if (op.compareTo("or") == 0)
+			return RTYPE;
+		else if (op.compareTo("add") == 0)
+			return RTYPE;
+		else if (op.compareTo("addi") == 0)
+			return ITYPE;
+		else if (op.compareTo("sll") == 0)
+			return ITYPE;
+		else if (op.compareTo("sub") == 0)
+			return RTYPE;
+		else if (op.compareTo("slt") == 0)
+			return RTYPE;
+		else if (op.compareTo("beq") == 0)
+			return ITYPE;
+		else if (op.compareTo("bne") == 0)
+			return ITYPE;
+		else if (op.compareTo("sw") == 0)
+			return ITYPE;
+		else if (op.compareTo("lw") == 0)
+			return ITYPE;
+		else if (op.compareTo("j") == 0)
+			return JTYPE;
+		else if (op.compareTo("jr") == 0)
+			return RTYPE;
+		else if (op.compareTo("jal") == 0)
+			return JTYPE;
+		else if (op.compareTo("empty") == 0)
+			return NOTYPE;
+		else if (op.compareTo("stall") == 0)
+			return NOTYPE;
+		else if (op.compareTo("squash") == 0)
+			return NOTYPE;
+		else
+			throw new SyntaxException("Could not find type for " + op + ".");
+	}
+	
+	public boolean isShift() {
+		if (op.compareTo("sll") == 0)
+			return true;
+		
+		return false;
+	}
+	
+	public boolean isBranch() {
+		
+		if (op.compareTo("beq") == 0)
+			return true;
+		else if (op.compareTo("bne") == 0)
+			return true;
+		return false;
+	}
+	
+	public  boolean isMemAccess() {
+		
+		if (op.compareTo("sw") == 0)
+			return true;
+		else if (op.compareTo("lw") == 0)
+			return true;
+		return false;
 	}
 	
 	public String toString() {
-		return this.op;
+		return op;
 	}
 }

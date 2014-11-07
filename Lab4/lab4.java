@@ -18,14 +18,14 @@ public class lab4 {
 	public static String script = null;
 	
 	public static MipsCPU cpu;
-	public static Simulator sim;
+	//public static Simulator sim;
 	
 	public static void main(String[] args) {
 		File assemblyFile;
 		String assemblyCode;
 		
-		sim = new Simulator();
-		System.out.println("Simulator: " + sim);
+		//sim = new Simulator();
+		//System.out.println("Simulator: " + sim);
 		
 		if (args.length > 0) {
 			try {
@@ -105,13 +105,14 @@ public class lab4 {
 							}
 							
 							for (int i = 0; i < step; i++) {
-								sim.nextInstruction(cpu.getNextInstruction());
+								//sim.nextInstruction(cpu.getNextInstruction());
 								
 								if (cpu.execute())
 									instructionsExecuted++;	
 							}
-							System.out.print("        " + instructionsExecuted
-								+ " instruction(s) executed");
+							System.out.println("\n" + cpu.getSimString());
+							//System.out.print("        " + instructionsExecuted
+							//	+ " instruction(s) executed");
 							instructionsExecuted = 0;
 						}
 						catch (NumberFormatException ex) {
@@ -160,7 +161,7 @@ public class lab4 {
 							System.out.println(label);
 					} 
 					else if (firstChar.compareTo("t") == 0) {
-						System.out.println(sim);
+						System.out.println(cpu.getSimString());
 					}
 					else if (firstChar.compareTo("q") == 0) {
 						return;
