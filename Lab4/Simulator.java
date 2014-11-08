@@ -8,58 +8,61 @@ public class Simulator {
 	public static final int EX = 1;
 	public static final int MEM = 0;
 	public static final int NUM_STAGES = 4;
+	public static final int BRANCH_PENALTY = 3;
 	
-	private int pc;
 	private int cycles;
-	private int instructions;
-	private boolean executionEnded;
-	private boolean simulationEnded;
 	private LinkedList<MipsInstruction> queue;
+	private InstructionMemory im;
 	
-	public Simulator() {
+	public Simulator(InstructionMemory im) {
+		this.im = im;
 		reset();
 	}
 	
 	public void reset() {
 		queue = new LinkedList<MipsInstruction>();
-		pc = 0;
-		instructions = 0;
 		cycles = 0;
-		executionEnded = false;
-		simulationEnded = false;
 		for (int i = 0; i < NUM_STAGES; i++) {
-			queue.add(new MipsInstruction(true, "empty"));
+			queue.add(new MipsInstruction(MipsInstruction.EMPTY));
 		}
 	
 	}
 	
-	public void nextInstructionIs(String next) throws SyntaxException, MemoryException,
+	public void setPC(int pc) throws SyntaxException, MemoryException,
 		NoSuchElementException, RegNotFoundException, NumberFormatException {
-		MipsInstruction instruction;
-		String removed;
 		
-		instruction = new MipsInstruction(next);
+		if (pc < im.size() && pc >= 0)
+			queue.add(new MipsInstruction(im.get(pc), pc));
+		else
+			queue.add(new MipsInstruction(MipsInstruction.END, pc));
 		
-		removed = queue.remove().op;
+	}
+	
+	public MipsInstruction getIF() {
+		return queue.get(IF);
+	}
+	
+	public MipsInstruction getID() {
+		return queue.get(ID);
+	}
+	
+	public MipsInstruction getEX() {
+		return queue.get(EX);
+	}
+	
+	public void updateQueue() {
 		
-		if (queue.get(0).op != null && queue.get(0).op.compareTo("empty") == 0 && executionEnded)
-			simulationEnded = true;
+		checkForLW();
+		checkForJump();
 		
-		if (!simulationEnded) {		
-			if (removed != null
-				&& removed.compareTo("empty") != 0
-				&& removed.compareTo("stall") != 0
-				&& removed.compareTo("squash") != 0)
-				instructions++;
-		
-			queue.add(instruction);
-			checkForLW();
-			//checkForJump();
-			//checkForBranch();
-		
-			pc++;
-			cycles++;
-		}
+		/*
+		if (squash) {
+					squash();
+				}
+				 
+		*/
+		queue.remove();
+		cycles++;
 	}
 	
 	private void checkForLW() {
@@ -68,8 +71,8 @@ public class Simulator {
 		
 		hazard = false;
 		
-		ex = queue.get(EX);
-		id = queue.get(ID);
+		ex = queue.get(ID);
+		id = queue.get(IF);
 		 
 		try {
 			if (ex.op.compareTo("lw") == 0) {
@@ -95,25 +98,45 @@ public class Simulator {
 		}
 		
 		if (hazard) {
-			pc--;
-			queue.add(EX + 1, new MipsInstruction(true, "stall"));
+			queue.add(ID + 1, new MipsInstruction(MipsInstruction.STALL));
 		}
 	}
 	
 	private void checkForJump() {
+		if (queue.get(IF).isJump())
+			queue.get(IF + 1).squash();
+	}
+	
+	public void squash() {
+		int numSquashed = 0;
+		int curReg;
+		MipsInstruction inst;
 		
-	}
-	
-	private void checkForBranch() {
+		curReg = ID;
 		
+		try {
+			while (numSquashed < BRANCH_PENALTY) {
+				if (curReg >= queue.size()) {
+					queue.add(new MipsInstruction(MipsInstruction.SQUASH));
+					numSquashed++;
+				}
+				else {
+					inst = queue.get(curReg);
+					if (inst.squashable()) {
+						inst.squash();
+						numSquashed++;
+					}
+				}
+				curReg++;
+			}
+		}
+		catch (Exception ex){
+			System.out.println("squash() caught " + ex);
+		}
 	}
 	
-	public void programEnd() {
-		executionEnded = true;
-	}
-	
-	public boolean simulationEnded() {
-		return simulationEnded;
+	public MipsInstruction endInstruction() {
+		return queue.get(0);
 	}
 	
 	public String toString() {
@@ -126,18 +149,41 @@ public class Simulator {
 		returnStr ="";
 		i = 0;
 		while (it.hasNext() && i++ < NUM_STAGES)
-			returnStr = "\t" + it.next().toString() + returnStr;
+			returnStr = " " + it.next().toString() + returnStr;
 		
-		returnStr = "pc if/id id/exe\texe/mem\tmem/wb\n" + pc + returnStr;
+		returnStr = "pc if/id id/exe\texe/mem\tmem/wb\n" + getPC() + returnStr;
 		
 		return returnStr;
+	}
+
+	private int getPC() {
+		int i;
+		int pc;
+		i = IF;
+		pc = queue.get(i).pc;
+		
+		while(pc == -1 && i > 0) {
+			pc = queue.get(i--).pc;
+		}
+		
+		if (pc == -1)
+			return 0;
+		
+		return pc;
 	}
 
 	public int getCycles() {
 		return cycles;
 	}
 	
-	public int getInstructions() {
-		return instructions;
+	public String getQueue() {
+		String queueStr;
+		
+		queueStr = "";
+		
+		for (int i = queue.size() - 1; i >= 0; i--)
+			queueStr = queueStr + queue.get(i).toString() + " ";
+		
+		return queueStr;
 	}
 }

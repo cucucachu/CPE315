@@ -9,7 +9,9 @@ public class MipsCPU {
 	private InstructionMemory instructionMemory;
 	private Simulator sim;
 	private ArrayList<Label> labels;
+	private boolean taken;
 	
+	public static int instructionsExecuted = 0;
 	
 	private int programCounter = 0;
 	
@@ -18,7 +20,7 @@ public class MipsCPU {
 		registerFile = new RegisterFile();
 		instructionMemory = new InstructionMemory(assemblyCode);
 		this.labels = labels;
-		sim = new Simulator();
+		sim = new Simulator(instructionMemory);
 		reset();
 	}
 	
@@ -26,20 +28,269 @@ public class MipsCPU {
 		memory.clear();
 		registerFile.clear();
 		sim.reset();
-		programCounter = 0;	
+		programCounter = 0;
+		instructionsExecuted = 0;
+		taken = false;
+	}
+	
+	public boolean execute() 
+		throws SyntaxException, MemoryException, NoSuchElementException, RegNotFoundException,
+			NumberFormatException {
+		
+		sim.setPC(programCounter++);
+		
+		if (checkForEnd())
+			return false;
+		
+		if (taken) {
+			sim.squash();
+			taken = false;
+		}
+		
+		EX();
+		ID();
+		IF();
+		
+		sim.updateQueue();
+		
+		return true;
+	}
+	
+	private void IF() throws SyntaxException, MemoryException, NoSuchElementException,
+		RegNotFoundException, NumberFormatException {
+		MipsInstruction mips;
+		
+		mips = sim.getIF();
+		
+		if (mips.isJump()) {
+			if (mips.op.compareTo("j") == 0) {
+				int index, address;
+	
+				index = labels.indexOf(new Label(mips.c.trim(), 0));
+	
+				if (index == -1)
+					address = new Integer(mips.c);
+				else
+					address = labels.get(index).getAbsoluteLineNumber();
+	
+				if (address >= 0 && address < instructionMemory.size()) {
+					programCounter = address;	
+					System.out.println("Jumping to " + programCounter);
+				}
+				else
+					throw new SyntaxException("Jump to address outside of program: " + address);
+	
+			}
+			else if (mips.op.compareTo("jr") == 0) {
+				int address;
+	
+				address = registerFile.get(mips.rs);
+	
+				if (address >= 0 && address < instructionMemory.size()) {
+					programCounter = address;
+					System.out.println("JR to " + address);
+				}
+				else
+					throw new SyntaxException("Jump to address outside of program: " + address);
+			}
+			else if (mips.op.compareTo("jal") == 0) {
+				int index, address;
+	
+				index = labels.indexOf(new Label(mips.c.trim(), 0));
+	
+				if (index == -1)
+					address = new Integer(mips.c);
+				else
+					address = labels.get(index).getAbsoluteLineNumber();
+	
+				if (address >= 0 && address < instructionMemory.size()) {
+					registerFile.set("$ra", sim.getIF().pc + 1);
+					programCounter = address;	
+				}
+				else
+					throw new SyntaxException("Jump to address outside of program: " + address);
+			} 
+		}
+	}
+	
+	private void ID() throws SyntaxException, MemoryException, NoSuchElementException,
+		RegNotFoundException, NumberFormatException {
+		MipsInstruction mips;
+		
+		mips = sim.getID();	
+		
+		if (mips.op.compareTo("beq") == 0) {
+			int index, address;
+
+			index = labels.indexOf(new Label(mips.c.trim(), 0));
+
+			if (index == -1)
+				address = new Integer(mips.c);
+			else
+				address = labels.get(index).getRelativeLineNumber(programCounter);
+
+			address += programCounter + 1;
+
+			if (address >= 0 && address < instructionMemory.size()) {
+				if (registerFile.get(mips.rs) == registerFile.get(mips.rt)) {
+					programCounter = address;
+					System.out.println("Branching to " + address);
+					taken = true;
+				}
+			}
+			else
+				throw new SyntaxException("Branch to address outside of program: " + address);
+		}
+		else if (mips.op.compareTo("bne") == 0) {
+			int index, address;
+
+			index = labels.indexOf(new Label(mips.c.trim(), 0));
+
+			if (index == -1)
+				address = new Integer(mips.c);
+			else
+				address = labels.get(index).getRelativeLineNumber(programCounter);
+
+			address += programCounter + 1;
+
+			if (address >= 0 && address < instructionMemory.size()) {
+				if (registerFile.get(mips.rs) != registerFile.get(mips.rt)) {
+					programCounter = address;
+					taken = true;
+				}
+			}
+			else
+				throw new SyntaxException("Branch to address outside of program: " + address);	
+		}
+	}
+	
+	private void EX() throws SyntaxException, MemoryException, NoSuchElementException,
+		RegNotFoundException, NumberFormatException {
+		MipsInstruction mips;
+		mips = sim.getEX();
+			
+		if (!mips.doNothing()) {
+
+			if (mips.op.compareTo("and") == 0) {	
+				registerFile.set(mips.rd, registerFile.get(mips.rs) & registerFile.get(mips.rt));
+			}
+			else if (mips.op.compareTo("or") == 0) {
+				registerFile.set(mips.rd, registerFile.get(mips.rs) | registerFile.get(mips.rt));
+			}
+			else if (mips.op.compareTo("add") == 0) {
+				registerFile.set(mips.rd, registerFile.get(mips.rs) + registerFile.get(mips.rt));
+			}
+			else if (mips.op.compareTo("addi") == 0) {
+				registerFile.set(mips.rt, registerFile.get(mips.rs) + new Integer(mips.imm));
+			}
+			else if (mips.op.compareTo("sll") == 0) {
+				Integer shiftAmount;
+				shiftAmount = new Integer(mips.shamt);
+	
+				if (shiftAmount < 0 || shiftAmount > 31)
+					throw new SyntaxException("Ilegal shift amount: " + shiftAmount);
+	
+				registerFile.set(mips.rd, registerFile.get(mips.rt) << shiftAmount);
+			}
+			else if (mips.op.compareTo("sub") == 0) {
+				registerFile.set(mips.rd, registerFile.get(mips.rs) - registerFile.get(mips.rt));
+			}
+			else if (mips.op.compareTo("slt") == 0) {
+				if (registerFile.get(mips.rs) < registerFile.get(mips.rt))
+					registerFile.set(mips.rd, 1);
+				else
+					registerFile.set(mips.rd, 0);
+			}
+			else if (mips.op.compareTo("beq") == 0) {
+			}
+			else if (mips.op.compareTo("bne") == 0) {
+			}
+/*
+			else if (mips.op.compareTo("beq") == 0) {
+			
+				int index, address;
+	
+				index = labels.indexOf(new Label(mips.c.trim(), 0));
+	
+				if (index == -1)
+					address = new Integer(mips.c);
+				else
+					address = labels.get(index).getRelativeLineNumber(programCounter);
+	
+				address += programCounter + 1;
+	
+				if (address >= 0 && address < instructionMemory.size()) {
+					if (registerFile.get(mips.rs) == registerFile.get(mips.rt)) {
+						programCounter = address;
+						System.out.println("Branching to " + address);
+						squash = true;
+					}
+				}
+				else
+					throw new SyntaxException("Branch to address outside of program: " + address);
+			}
+			else if (mips.op.compareTo("bne") == 0) {
+				int index, address;
+	
+				index = labels.indexOf(new Label(mips.c.trim(), 0));
+	
+				if (index == -1)
+					address = new Integer(mips.c);
+				else
+					address = labels.get(index).getRelativeLineNumber(programCounter);
+	
+				address += programCounter + 1;
+	
+				if (address >= 0 && address < instructionMemory.size()) {
+					if (registerFile.get(mips.rs) != registerFile.get(mips.rt)) {
+						programCounter = address;
+						squash = true;
+					}
+				}
+				else
+					throw new SyntaxException("Branch to address outside of program: " + address);	
+			} 
+*/
+			else if (mips.op.compareTo("lw") == 0) {
+				int address;
+				address = registerFile.get(mips.rs) + new Integer(mips.c);
+	
+				registerFile.set(mips.rt, memory.get(address));
+			}
+			else if (mips.op.compareTo("sw") == 0) {
+				int address;
+	
+				address = registerFile.get(mips.rs) + new Integer(mips.c);
+	
+				memory.set(address, registerFile.get(mips.rt));
+			}			
+			else if (mips.op.compareTo("j") == 0) {
+			}
+			else if (mips.op.compareTo("jr") == 0) {
+			}
+			else if (mips.op.compareTo("jal") == 0) {
+			}
+			else
+				throw new SyntaxException("Unknown isntruction: " + mips.op);
+			
+			instructionsExecuted++;
+		}
+	}
+	
+	private boolean checkForEnd() {
+		MipsInstruction mips;
+		mips = sim.endInstruction();
+		
+		return mips.end;
 	}
 	
 	public String instructionMemoryToSting() {
 		return instructionMemory.toString();
 	}
 	
-	public String getNextInstruction() {
-		try {
-			return instructionMemory.get(programCounter);
-		}
-		catch (MemoryException ex) {
-			return "No more instructions.";
-		}
+	
+	public String getQueue() {
+			return sim.getQueue();
 	}
 	
 	public String getMemoryString(int from, int to) {
@@ -58,242 +309,7 @@ public class MipsCPU {
 		return sim.toString();
 	}
 	
-	public boolean execute() 
-		throws SyntaxException, MemoryException, NoSuchElementException, RegNotFoundException,
-			NumberFormatException {
-		String instruction;
-		Scanner scanner;
-		String operation;
-		int labelIndex;
-		
-		if (programCounter >= instructionMemory.size()) {
-			sim.nextInstructionIs("empty");
-			sim.programEnd();
-			if (sim.simulationEnded())
-				return false;
-			return true;
-		}
-			
-		instruction = instructionMemory.get(programCounter);
-		instruction = instruction.trim();
-		
-		instruction = Formatter.removeLabels(instruction);
-	
-		instruction = instruction.replace("(", " ");
-		instruction = instruction.replace(")", " ");
-	
-		if (instruction.compareTo("") == 0)
-			return false;
-	
-		sim.nextInstructionIs(instruction);
-	
-		scanner = new Scanner(instruction);
-
-		operation = scanner.next();
-
-		operation = operation.trim();
-		operation = operation.toLowerCase();
-
-		if (operation.compareTo("and") == 0) {
-			String rd, rs, rt;
-	
-			rd = scanner.next();
-			rs = scanner.next();
-			rt = scanner.next();
-	
-			registerFile.set(rd, registerFile.get(rs) & registerFile.get(rt));
-		}
-		else if (operation.compareTo("or") == 0) {
-			String rd, rs, rt;
-	
-			rd = scanner.next();
-			rs = scanner.next();
-			rt = scanner.next();
-	
-			registerFile.set(rd, registerFile.get(rs) | registerFile.get(rt));
-		}
-		else if (operation.compareTo("add") == 0) {
-			String rd, rs, rt;
-	
-			rd = scanner.next();
-			rs = scanner.next();
-			rt = scanner.next();
-	
-			registerFile.set(rd, registerFile.get(rs) + registerFile.get(rt));
-		}
-		else if (operation.compareTo("addi") == 0) {
-			String rt, rs, imm;
-	
-			rt = scanner.next();
-			rs = scanner.next();
-			imm = scanner.next();
-	
-			registerFile.set(rt, registerFile.get(rs) + new Integer(imm));
-		}
-		else if (operation.compareTo("sll") == 0) {
-			String rd, rt, shamt;
-			Integer shiftAmount;
-	
-			rd = scanner.next();
-			rt = scanner.next();
-			shamt = scanner.next();
-	
-			shiftAmount = new Integer(shamt);
-	
-			if (shiftAmount < 0 || shiftAmount > 31)
-				throw new SyntaxException("Ilegal shift amount: " + shiftAmount);
-	
-			registerFile.set(rd, registerFile.get(rt) << shiftAmount);
-		}
-		else if (operation.compareTo("sub") == 0) {
-			String rd, rs, rt;
-	
-			rd = scanner.next();
-			rs = scanner.next();
-			rt = scanner.next();
-	
-			registerFile.set(rd, registerFile.get(rs) - registerFile.get(rt));
-		}
-		else if (operation.compareTo("slt") == 0) {
-			String rd, rs, rt;
-	
-			rd = scanner.next();
-			rs = scanner.next();
-			rt = scanner.next();
-	
-			if (registerFile.get(rs) < registerFile.get(rt))
-				registerFile.set(rd, 1);
-			else
-				registerFile.set(rd, 0);
-		}
-		else if (operation.compareTo("beq") == 0) {
-			String rt, rs, C;
-			int index, address;
-	
-			rt = scanner.next();
-			rs = scanner.next();
-			C = scanner.next();
-	
-			index = labels.indexOf(new Label(C.trim(), 0));
-	
-			if (index == -1)
-				address = new Integer(C);
-			else
-				address = labels.get(index).getRelativeLineNumber(programCounter);
-	
-			address += programCounter;
-	
-			if (address >= 0 && address < instructionMemory.size()) {
-				if (registerFile.get(rs) == registerFile.get(rt))
-					programCounter = address;	
-			}
-			else
-				throw new SyntaxException("Branch to address outside of program: " + address);
-		}
-		else if (operation.compareTo("bne") == 0) {
-			String rt, rs, C;
-			int index, address;
-	
-			rt = scanner.next();
-			rs = scanner.next();
-			C = scanner.next();
-	
-			index = labels.indexOf(new Label(C.trim(), 0));
-	
-			if (index == -1)
-				address = new Integer(C);
-			else
-				address = labels.get(index).getRelativeLineNumber(programCounter);
-	
-			address += programCounter;
-	
-			if (address >= 0 && address < instructionMemory.size()) {
-				if (registerFile.get(rs) != registerFile.get(rt))
-					programCounter = address;	
-			}
-			else
-				throw new SyntaxException("Branch to address outside of program: " + address);			
-		}
-		else if (operation.compareTo("lw") == 0) {
-			String rt, C, rs;
-			int address;
-	
-			rt = scanner.next();
-			C = scanner.next();
-			rs = scanner.next();
-	
-			address = registerFile.get(rs) + new Integer(C);
-	
-			registerFile.set(rt, memory.get(address));
-		}
-		else if (operation.compareTo("sw") == 0) {
-			String rt, C, rs;
-			int address;
-	
-			rt = scanner.next();
-			C = scanner.next();
-			rs = scanner.next();
-	
-			address = registerFile.get(rs) + new Integer(C);
-	
-			memory.set(address, registerFile.get(rt));
-		}
-		else if (operation.compareTo("j") == 0) {
-			String C;
-			int index, address;
-			C = scanner.next();
-	
-			index = labels.indexOf(new Label(C.trim(), 0));
-	
-			if (index == -1)
-				address = new Integer(C);
-			else
-				address = labels.get(index).getAbsoluteLineNumber();
-	
-			if (address >= 0 && address < instructionMemory.size()) {
-				programCounter = address - 1;	
-			}
-			else
-				throw new SyntaxException("Jump to address outside of program: " + address);
-	
-		}
-		else if (operation.compareTo("jr") == 0) {
-			String rs;
-			int address;
-			rs = scanner.next();
-	
-			address = registerFile.get(rs);
-	
-			if (address >= 0 && address < instructionMemory.size()) {
-				programCounter = address - 1;	
-			}
-			else
-				throw new SyntaxException("Jump to address outside of program: " + address);
-		}
-		else if (operation.compareTo("jal") == 0) {
-			String C;
-			int index, address;
-			C = scanner.next();
-	
-			index = labels.indexOf(new Label(C.trim(), 0));
-	
-			if (index == -1)
-				address = new Integer(C);
-			else
-				address = labels.get(index).getAbsoluteLineNumber();
-	
-			if (address >= 0 && address < instructionMemory.size()) {
-				registerFile.set("$ra", programCounter+1);
-				programCounter = address - 1;	
-			}
-			else
-				throw new SyntaxException("Jump to address outside of program: " + address);
-		}
-		else
-			throw new SyntaxException("Unknown isntruction: " + operation);
-	
-		programCounter++;
-	
-		return true;
+	public int getCycles() {
+		return sim.getCycles();
 	}
 }

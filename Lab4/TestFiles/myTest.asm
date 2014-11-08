@@ -1,0 +1,12 @@
+lw $s0, 0($sp)
+addi $t0, $0, 1
+
+sw $t0, 0($sp)
+addi $t1, $t1, 1
+
+loop:
+beq $t0, $0, end
+addi $t0, $t0, -1
+j loop
+
+end: addi $s0 $0 15

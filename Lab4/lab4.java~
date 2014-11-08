@@ -14,7 +14,6 @@ public class lab4 {
 		
 	public static final String PROMPT = "mips> ";
 	public static ArrayList<Label> labels;
-	public static int instructionsExecuted = 0;
 	public static String script = null;
 	
 	public static MipsCPU cpu;
@@ -106,14 +105,11 @@ public class lab4 {
 							
 							for (int i = 0; i < step; i++) {
 								//sim.nextInstruction(cpu.getNextInstruction());
-								
-								if (cpu.execute())
-									instructionsExecuted++;	
+								cpu.execute();
 							}
-							System.out.println(cpu.getSimString());
+							System.out.println("\n" + cpu.getSimString());
 							//System.out.print("        " + instructionsExecuted
 							//	+ " instruction(s) executed");
-							instructionsExecuted = 0;
 						}
 						catch (NumberFormatException ex) {
 							System.out.println("s <numSteps>");
@@ -121,7 +117,15 @@ public class lab4 {
 					}
 					else if (firstChar.compareTo("r") == 0) {
 						while(cpu.execute());
-						instructionsExecuted = 0;
+						
+						int cycles = cpu.getCycles();
+						double CPI = (double)cycles / (double)cpu.instructionsExecuted;
+						
+						System.out.println();
+						System.out.println("Program complete");
+						System.out.printf("CPI = %.2f Cycles = %d Instructions = %d\n",
+							CPI, cycles, cpu.instructionsExecuted);
+						System.out.println();
 					}
 					else if (firstChar.compareTo("m") == 0) {
 						try {
@@ -146,11 +150,6 @@ public class lab4 {
 					else if (firstChar.compareTo("c") == 0) {
 						cpu.reset();
 						System.out.println("        Simulator reset");
-					}					
-					else if (firstChar.compareTo("i") == 0) {
-						System.out.println("Next instruction: \"" 
-							+ cpu.getNextInstruction() + "\" at pc=" 
-							+ cpu.getProgramCounter());
 					}
 					else if (firstChar.compareTo("a") == 0) {
 						System.out.println(cpu.instructionMemoryToSting());
@@ -162,6 +161,9 @@ public class lab4 {
 					} 
 					else if (firstChar.compareTo("t") == 0) {
 						System.out.println(cpu.getSimString());
+					} 
+					else if (firstChar.compareTo("p") == 0) {
+						System.out.println(cpu.getQueue());
 					}
 					else if (firstChar.compareTo("q") == 0) {
 						return;
