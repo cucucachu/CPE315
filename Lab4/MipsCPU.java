@@ -10,6 +10,7 @@ public class MipsCPU {
 	private Simulator sim;
 	private ArrayList<Label> labels;
 	private boolean taken;
+	private int branchAddress;
 	
 	public static int instructionsExecuted = 0;
 	
@@ -31,6 +32,7 @@ public class MipsCPU {
 		programCounter = 0;
 		instructionsExecuted = 0;
 		taken = false;
+		branchAddress = 0;
 	}
 	
 	public boolean execute() 
@@ -45,10 +47,12 @@ public class MipsCPU {
 		if (taken) {
 			sim.squash();
 			taken = false;
-		}
+			programCounter = branchAddress;
+		} 
 		
 		EX();
 		ID();
+		
 		IF();
 		
 		sim.updateQueue();
@@ -133,7 +137,8 @@ public class MipsCPU {
 
 			if (address >= 0 && address < instructionMemory.size()) {
 				if (registerFile.get(mips.rs) == registerFile.get(mips.rt)) {
-					programCounter = address;
+					//programCounter = address;
+					branchAddress = address;
 					System.out.println("Branching to " + address);
 					taken = true;
 				}
@@ -155,7 +160,8 @@ public class MipsCPU {
 
 			if (address >= 0 && address < instructionMemory.size()) {
 				if (registerFile.get(mips.rs) != registerFile.get(mips.rt)) {
-					programCounter = address;
+					//programCounter = address;
+					branchAddress = address;
 					taken = true;
 				}
 			}
@@ -205,52 +211,6 @@ public class MipsCPU {
 			}
 			else if (mips.op.compareTo("bne") == 0) {
 			}
-/*
-			else if (mips.op.compareTo("beq") == 0) {
-			
-				int index, address;
-	
-				index = labels.indexOf(new Label(mips.c.trim(), 0));
-	
-				if (index == -1)
-					address = new Integer(mips.c);
-				else
-					address = labels.get(index).getRelativeLineNumber(programCounter);
-	
-				address += programCounter + 1;
-	
-				if (address >= 0 && address < instructionMemory.size()) {
-					if (registerFile.get(mips.rs) == registerFile.get(mips.rt)) {
-						programCounter = address;
-						System.out.println("Branching to " + address);
-						squash = true;
-					}
-				}
-				else
-					throw new SyntaxException("Branch to address outside of program: " + address);
-			}
-			else if (mips.op.compareTo("bne") == 0) {
-				int index, address;
-	
-				index = labels.indexOf(new Label(mips.c.trim(), 0));
-	
-				if (index == -1)
-					address = new Integer(mips.c);
-				else
-					address = labels.get(index).getRelativeLineNumber(programCounter);
-	
-				address += programCounter + 1;
-	
-				if (address >= 0 && address < instructionMemory.size()) {
-					if (registerFile.get(mips.rs) != registerFile.get(mips.rt)) {
-						programCounter = address;
-						squash = true;
-					}
-				}
-				else
-					throw new SyntaxException("Branch to address outside of program: " + address);	
-			} 
-*/
 			else if (mips.op.compareTo("lw") == 0) {
 				int address;
 				address = registerFile.get(mips.rs) + new Integer(mips.c);

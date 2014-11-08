@@ -8,5 +8,6 @@ loop:
 beq $t0, $0, end
 addi $t0, $t0, -1
 j loop
+add $0 $0 $0
 
-end: addi $s0 $0 15
+end: sub $s0 $0 $s0

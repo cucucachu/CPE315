@@ -38,21 +38,8 @@ public class Simulator {
 		
 	}
 	
-	public MipsInstruction getIF() {
-		return queue.get(IF);
-	}
-	
-	public MipsInstruction getID() {
-		return queue.get(ID);
-	}
-	
-	public MipsInstruction getEX() {
-		return queue.get(EX);
-	}
-	
 	public void updateQueue() {
 		
-		checkForLW();
 		checkForJump();
 		
 		/*
@@ -65,7 +52,7 @@ public class Simulator {
 		cycles++;
 	}
 	
-	private void checkForLW() {
+	public boolean checkForLW() {
 		MipsInstruction ex, id;
 		boolean hazard;
 		
@@ -100,11 +87,24 @@ public class Simulator {
 		if (hazard) {
 			queue.add(ID + 1, new MipsInstruction(MipsInstruction.STALL));
 		}
+		return hazard;
 	}
 	
 	private void checkForJump() {
 		if (queue.get(IF).isJump())
 			queue.get(IF + 1).squash();
+	}
+	
+	public MipsInstruction getIF() {
+		return queue.get(IF);
+	}
+	
+	public MipsInstruction getID() {
+		return queue.get(ID);
+	}
+	
+	public MipsInstruction getEX() {
+		return queue.get(EX);
 	}
 	
 	public void squash() {

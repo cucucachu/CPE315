@@ -38,31 +38,21 @@ public class Simulator {
 		
 	}
 	
-	public MipsInstruction getIF() {
-		return queue.get(IF);
-	}
-	
-	public MipsInstruction getID() {
-		return queue.get(ID);
-	}
-	
-	public MipsInstruction getEX() {
-		return queue.get(EX);
-	}
-	
-	public void updateQueue(boolean squash) {
-		checkForLW();
+	public void updateQueue() {
+		
 		checkForJump();
 		
+		/*
 		if (squash) {
-			squash();
-		}
-		
+					squash();
+				}
+				 
+		*/
 		queue.remove();
 		cycles++;
 	}
 	
-	private void checkForLW() {
+	public boolean checkForLW() {
 		MipsInstruction ex, id;
 		boolean hazard;
 		
@@ -97,6 +87,7 @@ public class Simulator {
 		if (hazard) {
 			queue.add(ID + 1, new MipsInstruction(MipsInstruction.STALL));
 		}
+		return hazard;
 	}
 	
 	private void checkForJump() {
@@ -104,12 +95,24 @@ public class Simulator {
 			queue.get(IF + 1).squash();
 	}
 	
+	public MipsInstruction getIF() {
+		return queue.get(IF);
+	}
+	
+	public MipsInstruction getID() {
+		return queue.get(ID);
+	}
+	
+	public MipsInstruction getEX() {
+		return queue.get(EX);
+	}
+	
 	public void squash() {
 		int numSquashed = 0;
 		int curReg;
 		MipsInstruction inst;
 		
-		curReg = ID;
+		curReg = EX;
 		
 		try {
 			while (numSquashed < BRANCH_PENALTY) {
