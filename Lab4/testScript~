@@ -1,0 +1,2 @@
+java lab4 TestFiles/lab4_test1.asm TestFiles/lab4_test1.script > TestFiles/myOut1.output
+diff TestFiles/lab4_test1.output TestFiles/myOut1.output

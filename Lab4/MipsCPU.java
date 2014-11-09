@@ -10,6 +10,7 @@ public class MipsCPU {
 	private Simulator sim;
 	private ArrayList<Label> labels;
 	private boolean taken;
+	private boolean stall;
 	private int branchAddress;
 	
 	public static int instructionsExecuted = 0;
@@ -32,6 +33,7 @@ public class MipsCPU {
 		programCounter = 0;
 		instructionsExecuted = 0;
 		taken = false;
+		stall = false;
 		branchAddress = 0;
 	}
 	
@@ -39,7 +41,10 @@ public class MipsCPU {
 		throws SyntaxException, MemoryException, NoSuchElementException, RegNotFoundException,
 			NumberFormatException {
 		
-		sim.setPC(programCounter++);
+		if (!stall)
+			sim.setPC(programCounter++);
+		
+		stall = false;
 		
 		if (checkForEnd())
 			return false;
@@ -79,7 +84,7 @@ public class MipsCPU {
 	
 				if (address >= 0 && address < instructionMemory.size()) {
 					programCounter = address;	
-					System.out.println("Jumping to " + programCounter);
+					//System.out.println("Jumping to " + programCounter);
 				}
 				else
 					throw new SyntaxException("Jump to address outside of program: " + address);
@@ -92,7 +97,7 @@ public class MipsCPU {
 	
 				if (address >= 0 && address < instructionMemory.size()) {
 					programCounter = address;
-					System.out.println("JR to " + address);
+					//System.out.println("JR to " + address);
 				}
 				else
 					throw new SyntaxException("Jump to address outside of program: " + address);
@@ -139,7 +144,7 @@ public class MipsCPU {
 				if (registerFile.get(mips.rs) == registerFile.get(mips.rt)) {
 					//programCounter = address;
 					branchAddress = address;
-					System.out.println("Branching to " + address);
+					//System.out.println("Branching to " + address);
 					taken = true;
 				}
 			}
@@ -167,6 +172,9 @@ public class MipsCPU {
 			}
 			else
 				throw new SyntaxException("Branch to address outside of program: " + address);	
+		}
+		else if (mips.op.compareTo("lw") == 0) {
+			stall = sim.checkForLW();
 		}
 	}
 	
@@ -266,7 +274,7 @@ public class MipsCPU {
 	}
 	
 	public String getSimString() {
-		return sim.toString();
+		return "pc if/id id/exe\texe/mem\tmem/wb\n" + programCounter + sim.toString();
 	}
 	
 	public int getCycles() {

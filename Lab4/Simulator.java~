@@ -63,7 +63,7 @@ public class Simulator {
 		 
 		try {
 			if (ex.op.compareTo("lw") == 0) {
-				if (ex.rt != null) {
+				if (ex.rt != null && ex.rt.compareTo("$0") != 0) {
 					if (id.getType() == MipsInstruction.RTYPE || id.isBranch()) {
 						if (id.rs != null && id.rs.compareTo(ex.rt) == 0) {
 							hazard = true;
@@ -85,6 +85,7 @@ public class Simulator {
 		}
 		
 		if (hazard) {
+			//System.out.println("Stall!!!!!!!!!!!!!!!!!!");
 			queue.add(ID + 1, new MipsInstruction(MipsInstruction.STALL));
 		}
 		return hazard;
@@ -112,7 +113,7 @@ public class Simulator {
 		int curReg;
 		MipsInstruction inst;
 		
-		curReg = EX;
+		curReg = ID;
 		
 		try {
 			while (numSquashed < BRANCH_PENALTY) {
