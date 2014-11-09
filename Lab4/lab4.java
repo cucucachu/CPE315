@@ -5,9 +5,10 @@ public class lab4 {
 	public static final String HELP_MESSAGE = 
 		"\nh = show help\n" +
 		"d = dump register state\n" +
-		"s = single step through the program (i.e. execute 1 instruction and stop)\n" +
-		"s num = step through num instructions of the program\n" +
-		"r = run until the program ends\n" +
+		"p = show pipeline registers\n" +
+		"s = step through a single clock cycle step\n" +
+		"s num = step through num clock cycles\n" +
+		"r = run until the program ends and display timing summary\n" +
 		"m num1 num2 = display data memory from location num1 to num2\n" +
 		"c = clear all registers, memory, and the program counter to 0\n" +
 		"q = exit the program";
@@ -151,6 +152,7 @@ public class lab4 {
 						cpu.reset();
 						System.out.println("        Simulator reset");
 					}
+					/*
 					else if (firstChar.compareTo("a") == 0) {
 						System.out.println(cpu.instructionMemoryToSting());
 					}
@@ -161,9 +163,11 @@ public class lab4 {
 					} 
 					else if (firstChar.compareTo("t") == 0) {
 						System.out.println(cpu.getSimString());
-					} 
+					}  
+					*/
 					else if (firstChar.compareTo("p") == 0) {
-						System.out.println(cpu.getQueue());
+						//System.out.println(cpu.getQueue());
+						System.out.println("\n" + cpu.getSimString());
 					}
 					else if (firstChar.compareTo("q") == 0) {
 						return;

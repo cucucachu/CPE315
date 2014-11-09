@@ -123,7 +123,7 @@ public class lab4 {
 						
 						System.out.println();
 						System.out.println("Program complete");
-						System.out.printf("CPI = %.2f Cycles = %d Instructions = %d\n",
+						System.out.printf("CPI = %.3f Cycles = %d Instructions = %d\n",
 							CPI, cycles, cpu.instructionsExecuted);
 						System.out.println();
 					}
@@ -163,7 +163,8 @@ public class lab4 {
 						System.out.println(cpu.getSimString());
 					} 
 					else if (firstChar.compareTo("p") == 0) {
-						System.out.println(cpu.getQueue());
+						//System.out.println(cpu.getQueue());
+						System.out.println("\n" + cpu.getSimString());
 					}
 					else if (firstChar.compareTo("q") == 0) {
 						return;
