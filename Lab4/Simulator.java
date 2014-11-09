@@ -52,14 +52,14 @@ public class Simulator {
 		cycles++;
 	}
 	
-	public boolean checkForLW() {
+	public boolean checkForLW(int reg) {
 		MipsInstruction ex, id;
 		boolean hazard;
 		
 		hazard = false;
 		
-		ex = queue.get(ID);
-		id = queue.get(IF);
+		ex = queue.get(reg);
+		id = queue.get(reg + 1);
 		 
 		try {
 			if (ex.op.compareTo("lw") == 0) {
@@ -86,9 +86,12 @@ public class Simulator {
 		
 		if (hazard) {
 			//System.out.println("Stall!!!!!!!!!!!!!!!!!!");
-			queue.add(ID + 1, new MipsInstruction(MipsInstruction.STALL));
 		}
 		return hazard;
+	}
+	
+	public void stall() {
+		queue.add(ID + 1, new MipsInstruction(MipsInstruction.STALL));
 	}
 	
 	private void checkForJump() {

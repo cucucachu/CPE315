@@ -233,7 +233,7 @@ public class MipsInstruction {
 	}
 	
 	public void squash() {
-		System.out.println(op + " squashed.");
+		//System.out.println(op + " squashed.");
 		op = "squash";
 		end = false;
 	}

@@ -1,2 +1,8 @@
 java lab4 TestFiles/lab4_test1.asm TestFiles/lab4_test1.script > TestFiles/myOut1.output
-diff TestFiles/lab4_test1.output TestFiles/myOut1.output
+diff -w -B TestFiles/lab4_test1.output TestFiles/myOut1.output
+java lab4 TestFiles/lab4_test2.asm TestFiles/lab4_test2.script > TestFiles/myOut2.output
+diff -w -B TestFiles/lab4_test2.output TestFiles/myOut2.output
+java lab4 TestFiles/lab4_fib10.asm TestFiles/lab4_fib10.script > TestFiles/myOut3.output
+diff -w -B TestFiles/lab4_fib10.output TestFiles/myOut3.output
+java lab4 TestFiles/lab4_fib20.asm TestFiles/lab4_fib20.script > TestFiles/myOut4.output
+diff -w -B TestFiles/lab4_fib20.output TestFiles/myOut4.output

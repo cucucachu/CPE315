@@ -41,8 +41,9 @@ public class MipsCPU {
 		throws SyntaxException, MemoryException, NoSuchElementException, RegNotFoundException,
 			NumberFormatException {
 		
-		if (!stall)
+		if (!stall) {
 			sim.setPC(programCounter++);
+		}
 		
 		stall = false;
 		
@@ -57,6 +58,11 @@ public class MipsCPU {
 		
 		EX();
 		ID();
+		
+		/*
+		if (stall)
+					programCounter--; 
+		*/
 		
 		IF();
 		
@@ -120,6 +126,9 @@ public class MipsCPU {
 					throw new SyntaxException("Jump to address outside of program: " + address);
 			} 
 		}
+		else if (mips.op.compareTo("lw") == 0) {
+			stall = sim.checkForLW(Simulator.IF);
+		}
 	}
 	
 	private void ID() throws SyntaxException, MemoryException, NoSuchElementException,
@@ -174,7 +183,8 @@ public class MipsCPU {
 				throw new SyntaxException("Branch to address outside of program: " + address);	
 		}
 		else if (mips.op.compareTo("lw") == 0) {
-			stall = sim.checkForLW();
+			if (sim.checkForLW(Simulator.ID))
+				sim.stall();
 		}
 	}
 	
