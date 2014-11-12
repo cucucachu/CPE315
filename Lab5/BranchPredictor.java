@@ -27,7 +27,7 @@ public class BranchPredictor {
 		address = patternToAddress();
 		prediction = predictions[address];
 		
-		System.out.println("prediction: " + prediction + " Taken: " + taken);
+		//System.out.println("prediction: " + prediction + " Taken: " + taken);
 		updatePrediction(address, taken);
 		
 		push(taken);

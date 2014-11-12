@@ -68,7 +68,7 @@ public class BranchPredictor {
 		for (int i = 0; i < predictions.length; i++) {
 			if (i % 8 == 0)
 				toReturn = toReturn + "\n";
-			toReturn = toReturn + predictions[i];
+			toReturn = toReturn + predictions[i] + " ";
 		}
 		
 		return toReturn;

@@ -161,7 +161,7 @@ public class lab5 {
 						correct = cpu.getGoodPredictions();
 						total = cpu.getTotalBranches();
 						accuracy = ((double)correct / (double) total) * 100;
-						System.out.printf("Accuracy = %.2f%%, Correct = %d, Total = %d",
+						System.out.printf("accuracy %.2f%% (%d correct predictions, %d predictions)",
 							accuracy, correct, total);
 					}
 					else if (firstChar.compareTo("x") == 0) {
