@@ -16,6 +16,7 @@ public class lab5 {
 	public static ArrayList<Label> labels;
 	public static int instructionsExecuted = 0;
 	public static String script = null;
+	public static int GHRSize = 2;
 	
 	public static MipsCPU cpu;
 	
@@ -31,15 +32,28 @@ public class lab5 {
 				
 				labels = Label.findLabels(assemblyCode);
 				
-				cpu = new MipsCPU(assemblyCode, labels, 8);
-				
-				if (args.length > 1)
+				if (args.length == 2) {
+					try {
+						GHRSize = new Integer(args[1]);
+					}
+					catch (NumberFormatException ex) {
+						script = args[1];
+					}
+				}			
+				else if (args.length == 3) {
 					script = args[1];
+					GHRSize = new Integer(args[2]);
+				}
+				
+				cpu = new MipsCPU(assemblyCode, labels, GHRSize);
 				
 				start();
 			}
 			catch (FileNotFoundException ex) {
 				System.out.println("One of the files could not be found.\n" + ex);
+			}
+			catch (NumberFormatException ex) {
+				System.out.println("Invalid GHR size given. " + ex);
 			}
 			catch (SyntaxException ex) {
 				System.out.println(ex);
@@ -147,7 +161,7 @@ public class lab5 {
 						correct = cpu.getGoodPredictions();
 						total = cpu.getTotalBranches();
 						accuracy = ((double)correct / (double) total) * 100;
-						System.out.printf("Accuracy = %.3f%%, Correct = %d, Total = %d",
+						System.out.printf("Accuracy = %.2f%%, Correct = %d, Total = %d",
 							accuracy, correct, total);
 					}
 					else if (firstChar.compareTo("x") == 0) {
