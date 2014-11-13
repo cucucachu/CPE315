@@ -2,7 +2,7 @@ import java.util.*;
 
 public class MipsCPU {
 
-	public static final int MEM_SIZE = 8192;
+	public static final int MEM_SIZE = 1000000; //=8192
 	
 	private Memory memory = new Memory(MEM_SIZE);
 	private RegisterFile registerFile = new RegisterFile();
@@ -67,6 +67,19 @@ public class MipsCPU {
 	
 	public String predictionsToString() {
 		return bp.predictionsToString();
+	}
+	
+	public int[] getCoordinates() throws MemoryException, RegNotFoundException {
+		int zerosInARow;
+		int endIndex;
+		int coo[];
+		
+		coo = new int[registerFile.get("$sp")];
+		
+		for (int i = 0; i < registerFile.get("$sp"); i++)
+			coo[i] = memory.get(i);
+		
+		return coo;
 	}
 	
 	private void branchPrediction(boolean taken) {

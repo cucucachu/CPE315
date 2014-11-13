@@ -164,6 +164,26 @@ public class lab5 {
 						System.out.printf("accuracy %.2f%% (%d correct predictions, %d predictions)",
 							accuracy, correct, total);
 					}
+					else if (firstChar.compareTo("o") == 0) {
+						int[] coo;
+						BufferedWriter writer;
+						
+						try {
+							writer = new BufferedWriter(new FileWriter(new File("coordinates.csv")));
+							coo = cpu.getCoordinates();
+						
+							for (int i = 0; i < coo.length; i+=2) {
+								//System.out.printf("(%d, %d)\n", coo[i], coo[i+1]);
+								writer.write(coo[i] + "," + coo[i+1] + "\n");
+							}
+							
+							writer.flush();
+							writer.close();
+						}
+						catch (IOException ex) {
+							System.out.println("Could not write to file. " + ex);
+						}
+					}
 					else if (firstChar.compareTo("x") == 0) {
 						System.out.println(cpu.predictionsToString());
 					}
