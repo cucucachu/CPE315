@@ -1,0 +1,109 @@
+import java.util.*;
+import java.io.*;
+
+public class lab6 {
+	
+	private static int[][] caches = new int[6][512];
+	private static int[] hits = new int[7];
+	private static int[] misses = new int[7];
+	
+	
+	public static void main(String[] args) {
+		Scanner scanner;
+		int address;
+		
+		if (args.length < 1) {
+			System.out.println("No memory stream given.");
+			return;
+		}
+		
+		try {
+			scanner = new Scanner(new File(args[0]));
+		
+			while (scanner.hasNext()) {
+				scanner.next();
+				address = Integer.parseInt(scanner.next(), 16);
+				
+				if (address < 0)
+					throw new Exception("Invalid Address " + address);
+				
+				System.out.printf("Input: %x\n", address);
+				cacheOne(address);
+			}
+		}
+		catch (FileNotFoundException ex) {
+			System.out.println("Could not find input file " + args[0]);
+		}
+		catch (Exception ex) {
+			System.out.println(ex);
+		}
+		
+		System.out.printf("Hits %d, Misses %d", hits[0], misses[0]);
+		System.out.printf("Hits %d, Misses %d", hits[1], misses[1]);
+		System.out.printf("Hits %d, Misses %d", hits[2], misses[2]);
+	}
+	
+	private static void cacheOne(int address) throws Exception {
+		int index;
+		
+		index = 0;
+		
+		index = (address >> 2) % 512;
+		
+		if (index > caches[0].length)
+			throw new Exception("Invalid index " + index);
+		
+		System.out.println("   " + index);
+		
+		// Cache 1
+		if (caches[0][index] == address)
+			hits[0]++;
+		else {
+			misses[0]++;
+			caches[0][index] = address;
+		}
+		
+		index = index - (index % 2);
+		address = address - (index % 2);
+		
+		// Cache 2
+		if (caches[1][index] == address)
+			hits[1]++;
+		else {
+			misses[1]++;
+			caches[1][index] = address;
+			caches[1][index+1] = address + 1;
+		}
+		/*
+		
+				// Cache 3
+				if (caches[2][index] == address)
+					hits[2]++;
+				else {
+					misses[2]++;
+					
+					caches[2][index] = address;
+					if (index % 4 == 0) {
+						caches[2][index+1] = address + 1;
+						caches[2][index+2] = address + 2;
+						caches[2][index+3] = address + 3;
+					}
+					if (index % 4 == 1) {
+						caches[2][index-1] = address - 1;
+						caches[2][index+1] = address + 1;
+						caches[2][index+2] = address + 2;
+					}
+					if (index % 4 == 2) {
+						caches[2][index-2] = address - 2;
+						caches[2][index-1] = address - 1;
+						caches[2][index+1] = address + 1;
+					}
+					if (index % 4 == 3) {
+						caches[2][index-1] = address - 1;
+						caches[2][index-2] = address - 2;
+						caches[2][index-3] = address - 3;
+					}
+				} 
+		*/
+	}
+}
